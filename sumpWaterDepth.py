@@ -18,7 +18,7 @@ def depth():
 
     depth = calibrationDepth - distance
 
-    return depth
+    return round (depth, 1)
 
 def make_thing():
     thing = Thing('Water Depth Sensor', ['MultiLevelSensor'], 'Depth of water in sump')
@@ -35,6 +35,7 @@ def make_thing():
                      'minimum': 0,
                      'maximum': 66,
                      'unit': 'cm',
+                     'readOnly': True,
                  }))
 
     return thing
