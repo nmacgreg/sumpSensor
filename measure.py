@@ -1,3 +1,7 @@
+#!/usr/bin/python
+# See: https://www.modmypi.com/blog/hc-sr04-ultrasonic-range-sensor-on-the-raspberry-pi
+# Comment: this doesn't seem reliable
+
 import RPi.GPIO as GPIO
 import time
 GPIO.setmode(GPIO.BCM)

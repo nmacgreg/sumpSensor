@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# See: https://pimylifeup.com/raspberry-pi-distance-sensor/
+# I didn't write this code.  I just copied it from the URL above, and modified 
+# the GPIO mode and pins to match the circuit I set up for measure.py.
 import RPi.GPIO as GPIO
 import time
 
