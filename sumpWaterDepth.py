@@ -61,6 +61,8 @@ def make_thing():
                      'label': 'cm',
                      'type': 'number',
                      'description': 'The depth of the water in my sump pit',
+                     'minimum': 0,
+                     'maximum': 66,
                      'unit': 'cm',
                  }))
 
