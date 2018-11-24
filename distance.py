@@ -18,9 +18,9 @@ def init_sensor():
       print "Waiting for sensor to settle"
       time.sleep(2)
 
-def measurement_loop():
+def measurement_loop(limit):
       counter=0
-      while counter < 30:
+      while counter < limit:
           # Strobe the trigger
           GPIO.output(PIN_TRIGGER, GPIO.HIGH)
           time.sleep(0.00001)
@@ -46,5 +46,5 @@ PIN_TRIGGER = 23
 PIN_ECHO = 24
 
 init_sensor()
-measurement_loop()
+measurement_loop(10)
 GPIO.cleanup()
