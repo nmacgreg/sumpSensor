@@ -31,7 +31,7 @@ def make_thing():
                      '@type': 'LevelProperty',
                      'label': 'cm',
                      'type': 'number',
-                     'description': 'The depth of the water in my sump pit',
+                     'description': 'The depth of the water in sump pit',
                      'minimum': 0,
                      'maximum': 66,
                      'unit': 'cm',
