@@ -44,8 +44,12 @@ class GPIODepthSensor(Thing):
         except CancelledError:
             # We have no cleanup to do on cancellation so we can just halt the
             # propagation of the cancellation exception and let the method end.
+            logging.debug('auto-update has been cancelled')
             pass
-
+        except: 
+            logging.debug('Unexpected error: ', sys.exc_info()[0])
+            raise
+    
     def cancel_update_level_task(self):
         self.sensor_update_task.cancel()
         get_event_loop().run_until_complete(self.sensor_update_task)
