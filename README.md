@@ -6,15 +6,19 @@ depth of the water in my sump pit.  The ultimate goal is to generate an alert if
 I'm using an ultrasonic "time-of-flight" distance measuring sensor, HC-SR04. These sensors are 
 pretty common, making an appearance in many "Learning Arduino/Learning RasPi" kits on Amazon & Adafruit.
 
-I've added 2 scripts that mostly work.  I'm still prototyping: 
 
-* distance.py works the best.
-* measure.py seems to have some bugs.
 
 # Environment
 * Hardware:  Rasberry Pi 3 Model B v1.2 (should work on most RasPi)
 * OS: Rasbian v3.0.0
 * Sensor: HC-SR04 
+
+# The Software
+I've added 2 scripts that mostly work.  I have shockingly little Python experience, and no experience 
+with WebThings, so these are initial steps in prototyping: 
+
+* distance.py works the best.
+* measure.py seems to have some bugs.
 
 Mozilla IoT WebThings is written for python v3.5; this Raspbian has a mixed environment, 
 with python2 the default, & python v3.5.3 available from the "python3" command.
@@ -40,12 +44,13 @@ You can manually throw it into the background:
 
 ---
 You can install this and run it as a proper service: 
+```bash
 > sudo cp depthsensor.serve /lib/systemd/system/
 > sudo chmod 644 /lib/systemd/system/depthsensor.serv
 > sudo systemctl daemon-reload
 > sudo systemctl enable depthsensor
 > sudo systemctl start depthsensor
-
+```
 ---
 # Testing
 You can get a full dump of the properties of the object: 
