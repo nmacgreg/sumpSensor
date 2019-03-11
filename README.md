@@ -52,10 +52,14 @@ You can install this and run it as a proper service:
 > sudo systemctl start depthsensor
 ```
 ---
-# Testing
+# Testing the WebThing
 You can get a full dump of the properties of the object: 
 > curl http://192.168.1.104:8888/
 
 You can monitor the depth of the water like this:
 > curl http://192.168.1.104:8888/0/properties/depth
 
+---
+# Packaging
+I'm really a Fedora guy; building an RPM would be trivial, but I have no experience building packages for Debian/Raspbian.
+Anybody got any ideas?
