@@ -9,7 +9,7 @@ import time
 import uuid
 
 class GPIODepthSensor(Thing):
-    """A humidity sensor which updates its measurement every few seconds."""
+    """A water depth sensor which updates its measurement every few seconds."""
 
     def __init__(self):
         Thing.__init__(self, 'Water Depth Sensor', ['MultiLevelSensor'], 'Depth of water in sump')
@@ -72,7 +72,7 @@ class GPIODepthSensor(Thing):
 
 
 def run_server():
-    # Create a thing that represents a humidity sensor
+    # Create a thing that represents my ultrasonic water depth sensor
     sensor = GPIODepthSensor()
 
     # If adding more than one thing, use MultipleThings() with a name.
