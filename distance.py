@@ -15,7 +15,7 @@ def init_sensor():
 
       GPIO.output(PIN_TRIGGER, GPIO.LOW) # Start this pin, set it to 0
 
-      print "Waiting for sensor to settle"
+      print ("Waiting for sensor to settle...")
       time.sleep(2)
 
 def measurement_loop(limit):
@@ -34,7 +34,7 @@ def measurement_loop(limit):
 
           pulse_duration = pulse_end_time - pulse_start_time
           distance = round(pulse_duration * 17150, 2)
-          print "Distance:",distance,"cm"
+          print ("Distance:",distance,"cm")
           time.sleep(0.5)
           counter += 1
 
@@ -42,9 +42,11 @@ def measurement_loop(limit):
 # Main...
 
 #bad global vars
-PIN_TRIGGER = 23
-PIN_ECHO = 24
+#PIN_TRIGGER = 23
+#PIN_ECHO = 24
+PIN_TRIGGER = 17
+PIN_ECHO = 27
 
 init_sensor()
-measurement_loop(10)
+measurement_loop(5)
 GPIO.cleanup()
