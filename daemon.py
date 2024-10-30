@@ -12,14 +12,6 @@ DEFAULT_AVERAGE_READINGS = 5
 DEFAULT_FREQUENCY_SEC = 60  # Measure every 60 seconds by default
 DEFAULT_SAMPLE_DEPTH = 10
 
-# GPIO Pin assignments
-PIN_TRIGGER = 17
-PIN_ECHO = 27
-
-# Sump-specific constants
-SENSOR_MIN_DISTANCE = 2  # Minimum distance in cm for sensor to read correctly
-SUMP_DEPTH_CM = 55       # Height from sensor to sump base
-
 # Initialize Flask app
 app = Flask(__name__)
 
@@ -28,8 +20,6 @@ average_readings = DEFAULT_AVERAGE_READINGS
 measurement_frequency = DEFAULT_FREQUENCY_SEC
 sample_depth = DEFAULT_SAMPLE_DEPTH
 measurements = deque(maxlen=sample_depth)
-sump_dimension_x = 60
-sump_dimension_y = 60
 current_rate = 0.0  # Filling rate in liters per minute
 
 # State variables
@@ -59,7 +49,7 @@ def measure_distance():
         pulse_end_time = time.time()
 
     pulse_duration = pulse_end_time - pulse_start_time
-    distance = round(pulse_duration * 17150, 2)
+    distance = round(pulse_duration * 17150)
     return distance
 
 
@@ -145,7 +135,7 @@ def load_config():
     PIN_TRIGGER = config.getint('Settings', 'PIN_TRIGGER', fallback=17)
     PIN_ECHO = config.getint('Settings', 'PIN_ECHO', fallback=27)
     SENSOR_MIN_DISTANCE  = config.getint('Settings', 'SENSOR_MIN_DISTANCE', fallback=2) 
-    SUMP_DEPTH_CM = config.getint('Settings', 'SENSOR_MIN_DISTANCE', fallback=55)
+    SUMP_DEPTH_CM = config.getint('Settings', 'SUMP_DEPTH_CM', fallback=55)
 
 
 
