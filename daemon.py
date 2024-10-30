@@ -49,7 +49,7 @@ def measure_distance():
         pulse_end_time = time.time()
 
     pulse_duration = pulse_end_time - pulse_start_time
-    distance = round(pulse_duration * 17150)
+    distance = round(pulse_duration * 17150, 2)
     return distance
 
 
@@ -63,7 +63,7 @@ def get_average_distance(count):
         distances.append(distance)
         time.sleep(0.5)
 
-    return sum(distances) / count if distances else None
+    return round(sum(distances) / count) if distances else None
 
 
 def monitor_sump():
