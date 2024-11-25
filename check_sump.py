@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Found in: https://github.com/nmacgreg/sumpSensor
 import RPi.GPIO as GPIO
 import time
 import sys
@@ -43,14 +44,19 @@ def measurement_loop(count, warning_threshold, critical_threshold):
     distances = []
     
     for _ in range(count):
-        distance = measure_distance()
+        try:
+            distance = measure_distance()
+        except: 
+            print("UNKNOWN - failed attempt to measure distance... sensor unplugged?")
+            sys.exit(3)
+                
         distances.append(distance)
         time.sleep(0.5)
     
     # Calculate average distance
     average_distance = round( sum(distances) / count)
     if average_distance < SENSOR_MIN_DISTANCE or average_distance > SUMP_DEPTH_CM:
-        print("UNKNOWN - Water depth measurement of {average_distance} is out of range (valid: {SENSOR_MIN_DISTANCE} - {SUMP_DEPTH_CM})")
+        print("UNKNOWN - Water depth measurement of ", average_distance, " is out of range (valid: ", SENSOR_MIN_DISTANCE, "cm to ", SUMP_DEPTH_CM, "cm)")
         sys.exit(3)
 
     # Determine Nagios plugin status
