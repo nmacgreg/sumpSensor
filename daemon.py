@@ -107,7 +107,7 @@ def update_state():
 @app.route('/api/average_depth', methods=['GET'])
 def get_average_depth():
     """API route to get the most recent averaged measurement."""
-    return jsonify({"average_depth_cm": latest_measurement})
+    return jsonify({"average_depth_cm": SUMP_DEPTH_CM-latest_measurement})
 
 
 @app.route('/api/state', methods=['GET'])
