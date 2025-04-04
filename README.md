@@ -1,6 +1,6 @@
 # Overview
 
-The purpose of this repository is to develop and share a software that reports the 
+The purpose of this repository is to develop and share software that reports the 
 depth of the water in my sump pit.  The ultimate goal is to generate an alert if the sump is 
 *too full*, indicating a problem that needs urgent resolution (flooding imminent).
 
