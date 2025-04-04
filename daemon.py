@@ -58,10 +58,13 @@ def get_average_distance(count):
     distances = []
     for _ in range(count):
         distance = measure_distance()
+        # need more error handling, here!
         if distance < SENSOR_MIN_DISTANCE or distance > SUMP_DEPTH_CM:
+            print("Sensor returned an unusable value:", distance)
             return None  # Out of range; should handle in the Nagios check
+        print("Took a valid measurement:", distance, "cm")
         distances.append(distance)
-        time.sleep(0.5)
+        time.sleep(0.25)
 
     return round(sum(distances) / count) if distances else None
 
@@ -107,7 +110,12 @@ def update_state():
 @app.route('/api/average_depth', methods=['GET'])
 def get_average_depth():
     """API route to get the most recent averaged measurement."""
-    return jsonify({"average_depth_cm": SUMP_DEPTH_CM-latest_measurement})
+    if latest_measurement: 
+        water_depth = SUMP_DEPTH_CM - latest_measurement
+        return jsonify({"average_depth_cm": water_depth})
+    else:
+        return jsonify({"average_depth_cm": "UNKNOWN"})
+        
 
 
 @app.route('/api/state', methods=['GET'])
