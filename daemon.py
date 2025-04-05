@@ -4,6 +4,8 @@ import time
 import configparser
 from flask import Flask, jsonify
 from collections import deque
+import prometheus_client
+from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
 import threading
 
 # Configuration defaults
@@ -26,6 +28,9 @@ current_rate = 0.0  # Filling rate in liters per minute
 filling = None
 latest_measurement = None
 
+# Prep for Prometheus interface
+# Define a Prometheus gauge metric for water depth
+water_depth_gauge = Gauge('sump_water_depth_cm', 'Depth of water in the sump in centimeters')
 
 def init_sensor():
     """Initialize GPIO settings for the HC-SR04 sensor."""
@@ -58,10 +63,13 @@ def get_average_distance(count):
     distances = []
     for _ in range(count):
         distance = measure_distance()
+        # need more error handling, here!
         if distance < SENSOR_MIN_DISTANCE or distance > SUMP_DEPTH_CM:
+            print("Sensor returned an unusable value:", distance)
             return None  # Out of range; should handle in the Nagios check
+        print("Took a valid measurement:", distance, "cm")
         distances.append(distance)
-        time.sleep(0.5)
+        time.sleep(0.25)
 
     return round(sum(distances) / count) if distances else None
 
@@ -107,7 +115,12 @@ def update_state():
 @app.route('/api/average_depth', methods=['GET'])
 def get_average_depth():
     """API route to get the most recent averaged measurement."""
-    return jsonify({"average_depth_cm": latest_measurement})
+    if latest_measurement: 
+        water_depth = SUMP_DEPTH_CM - latest_measurement
+        return jsonify({"average_depth_cm": water_depth})
+    else:
+        return jsonify({"average_depth_cm": "UNKNOWN"})
+        
 
 
 @app.route('/api/state', methods=['GET'])
@@ -121,6 +134,16 @@ def get_fill_rate():
     """API route to get the current fill rate in liters per minute."""
     return jsonify({"fill_rate_liters_per_minute": current_rate})
 
+# Add a new endpoint for Prometheus metrics
+@app.route('/metrics', methods=['GET'])
+def metrics():
+    # Update the gauge with current water depth
+    if latest_measurement: 
+        water_depth = SUMP_DEPTH_CM - latest_measurement
+    water_depth_gauge.set(water_depth)
+
+    # Generate and return metrics in Prometheus format
+    return generate_latest(prometheus_client.REGISTRY), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
 def load_config():
     """Load configuration file and set parameters."""
