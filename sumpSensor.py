@@ -41,6 +41,18 @@ def init_sensor():
     print("Waiting for sensor to settle...")
     time.sleep(2)
 
+initialized = False
+
+def initialize():
+    global initialized
+    if initialized:
+        return
+    load_config()
+    init_sensor()
+    monitoring_thread = threading.Thread(target=monitor_sump)
+    monitoring_thread.daemon = True
+    monitoring_thread.start()
+    initialized = True
 
 def measure_distance():
     """Send a trigger pulse and measure the echo response to calculate distance."""
@@ -111,6 +123,10 @@ def update_state():
         else:
             filling = "static"
 
+# Initialize the sensor, and start a thread responsible for collecting measurements from it
+@app.before_first_request
+def startup():
+    initialize()
 
 @app.route('/api/average_depth', methods=['GET'])
 def get_average_depth():
@@ -137,6 +153,7 @@ def get_fill_rate():
 # Add a new endpoint for Prometheus metrics
 @app.route('/metrics', methods=['GET'])
 def metrics():
+    water_depth=-1
     # Update the gauge with current water depth
     if latest_measurement: 
         water_depth = SUMP_DEPTH_CM - latest_measurement
