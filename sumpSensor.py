@@ -7,6 +7,19 @@ from collections import deque
 import prometheus_client
 from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
 import threading
+import logging
+import sys
+
+# Configure logging, for running under gunicorn & systemd
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Configuration defaults
 CONFIG_PATH = "/etc/sumpSensor/sumpSensor.conf"
@@ -38,7 +51,7 @@ def init_sensor():
     GPIO.setup(PIN_TRIGGER, GPIO.OUT)
     GPIO.setup(PIN_ECHO, GPIO.IN)
     GPIO.output(PIN_TRIGGER, GPIO.LOW)
-    print("Waiting for sensor to settle...")
+    logger.info("Waiting for sensor to settle...")
     time.sleep(2)
 
 initialized = False
@@ -77,9 +90,9 @@ def get_average_distance(count):
         distance = measure_distance()
         # need more error handling, here!
         if distance < SENSOR_MIN_DISTANCE or distance > SUMP_DEPTH_CM:
-            print("Sensor returned an unusable value:", distance)
+            logger.warning("Sensor returned an unusable value: %s", distance)
             return None  # Out of range; should handle in the Nagios check
-        print("Took a valid measurement:", distance, "cm")
+        logger.info("Took a valid measurement: %s cm", distance)
         distances.append(distance)
         time.sleep(0.25)
 
