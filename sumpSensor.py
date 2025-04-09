@@ -44,6 +44,7 @@ latest_measurement = None
 # Prep for Prometheus interface
 # Define a Prometheus gauge metric for water depth
 water_depth_gauge = Gauge('sump_water_depth_cm', 'Depth of water in the sump in centimeters')
+sump_fill_rate_gauge = Gauge('sump_fill_rate_liters_per_min', 'Rate of fill or empty, in liters per minute')
 
 def init_sensor():
     """Initialize GPIO settings for the HC-SR04 sensor."""
@@ -181,10 +182,12 @@ def get_fill_rate():
 @app.route('/metrics', methods=['GET'])
 def metrics():
     water_depth=-1
+    global latest_measurement, current_rate
     # Update the gauge with current water depth
     if latest_measurement: 
         water_depth = SUMP_DEPTH_CM - latest_measurement
     water_depth_gauge.set(water_depth)
+    sump_fill_rate_gauge.set(current_rate)
 
     # Generate and return metrics in Prometheus format
     return generate_latest(prometheus_client.REGISTRY), 200, {'Content-Type': CONTENT_TYPE_LATEST}
