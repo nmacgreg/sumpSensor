@@ -108,33 +108,47 @@ def monitor_sump():
         if latest_measurement:
             measurements.append(latest_measurement)
             calculate_fill_rate()
-            update_state()
         
         time.sleep(measurement_frequency)
 
 
 def calculate_fill_rate():
-    """Calculate the rate at which the sump is filling in liters per minute."""
+    """Calculate the rate at which the sump is filling in liters per minute using all available measurements."""
+    global filling, RATE_THRESHOLD
+    filling = "static"      # Default value if calculations fail
     if sump_dimension_x > 0 and sump_dimension_y > 0 and len(measurements) >= 2:
         area_cm2 = sump_dimension_x * sump_dimension_y
-        change_in_depth_cm = measurements[-2] - measurements[-1]  # Depth change in cm
-        volume_change_cm3 = area_cm2 * change_in_depth_cm  # Volume in cubic cm
-        volume_change_liters = volume_change_cm3 / 1000  # Convert to liters
 
-        time_interval_min = measurement_frequency / 60  # Convert frequency to minutes
-        current_rate = volume_change_liters / time_interval_min
+        # Generate a time vector in minutes based on measurement frequency
+        times_min = [i * (measurement_frequency / 60) for i in range(len(measurements))]
 
+        # Least-squares linear regression to estimate slope (depth per minute)
+        n = len(measurements)
+        sum_t = sum(times_min)
+        sum_d = sum(measurements)
+        sum_t2 = sum(t * t for t in times_min)
+        sum_td = sum(t * d for t, d in zip(times_min, measurements))
 
-def update_state():
-    """Update the filling status based on recent measurements."""
-    global filling
-    if len(measurements) >= 2:
-        if measurements[-1] < measurements[-2]:
+        denominator = n * sum_t2 - sum_t ** 2
+        if denominator == 0:
+            return 0.0  # Avoid divide-by-zero if all time samples are the same
+
+        slope_cm_per_min = (n * sum_td - sum_t * sum_d) / denominator
+
+        # Convert depth change into volume change
+        volume_change_cm3_per_min = slope_cm_per_min * area_cm2
+        volume_change_liters_per_min = volume_change_cm3_per_min / 1000.0
+
+        if volume_change_liters_per_min > RATE_THRESHOLD:
             filling = "filling"
-        elif measurements[-1] > measurements[-2]:
+        elif volume_change_liters_per_min < -RATE_THRESHOLD:
             filling = "emptying"
         else:
             filling = "static"
+
+        return volume_change_liters_per_min
+
+    return 0.0
 
 # Initialize the sensor, and start a thread responsible for collecting measurements from it
 @app.before_first_request
@@ -179,17 +193,17 @@ def load_config():
     """Load configuration file and set parameters."""
     config = configparser.ConfigParser()
     config.read(CONFIG_PATH)
-    global average_readings, measurement_frequency, sample_depth, sump_dimension_x, sump_dimension_y, PIN_TRIGGER, PIN_ECHO, SENSOR_MIN_DISTANCE, SUMP_DEPTH_CM
+    global average_readings, measurement_frequency, sample_depth, sump_dimension_x, sump_dimension_y, PIN_TRIGGER, PIN_ECHO, SENSOR_MIN_DISTANCE, SUMP_DEPTH_CM, RATE_THRESHOLD
     average_readings = config.getint('Settings', 'readings_to_average', fallback=DEFAULT_AVERAGE_READINGS)
     measurement_frequency = config.getint('Settings', 'measurement_frequency', fallback=DEFAULT_FREQUENCY_SEC)
     sample_depth = config.getint('Settings', 'sample_depth', fallback=DEFAULT_SAMPLE_DEPTH)
-    sump_dimension_x = config.getint('Settings', 'sump_dimension_x', fallback=60)
-    sump_dimension_y = config.getint('Settings', 'sump_dimension_y', fallback=60)
+    sump_dimension_x = config.getfloat('Settings', 'sump_dimension_x', fallback=60)
+    sump_dimension_y = config.getfloat('Settings', 'sump_dimension_y', fallback=60)
     PIN_TRIGGER = config.getint('Settings', 'PIN_TRIGGER', fallback=17)
     PIN_ECHO = config.getint('Settings', 'PIN_ECHO', fallback=27)
     SENSOR_MIN_DISTANCE  = config.getint('Settings', 'SENSOR_MIN_DISTANCE', fallback=2) 
-    SUMP_DEPTH_CM = config.getint('Settings', 'SUMP_DEPTH_CM', fallback=55)
-
+    SUMP_DEPTH_CM = config.getfloat('Settings', 'SUMP_DEPTH_CM', fallback=55)
+    RATE_THRESHOLD = config.getfloat('Settings', 'RATE_THRESHOLD', fallback=0.1)
 
 
 if __name__ == "__main__":
