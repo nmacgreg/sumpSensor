@@ -68,7 +68,7 @@ def initialize():
     monitoring_thread.start()
     initialized = True
 
-def measure_distance():
+def get_sensor_reading():
     """Send a trigger pulse and measure the echo response to calculate distance."""
     GPIO.output(PIN_TRIGGER, GPIO.HIGH)
     time.sleep(0.00001)
@@ -86,14 +86,21 @@ def measure_distance():
 
 def get_average_distance(count):
     """Take multiple measurements and return the average."""
+    global SENSOR_MIN_DISTANCE, SUMP_DEPTH_CM
     distances = []
     for _ in range(count):
-        distance = measure_distance()
+        distance = get_sensor_reading()
         # need more error handling, here!
-        if distance < SENSOR_MIN_DISTANCE or distance > SUMP_DEPTH_CM:
-            logger.warning("Sensor returned an unusable value: %s", distance)
-            return None  # Out of range; should handle in the Nagios check
-        logger.info("Took a valid measurement: %s cm", distance)
+        if distance < SENSOR_MIN_DISTANCE:
+            logger.warning("Ignoring this unusable value from the sensor: %s", distance)
+            next
+        if distance > SUMP_DEPTH_CM:  # Out-of-range check
+            if distance > SUMP_DEPTH_CM + 1: # Wildly out of range? 
+                logger.warning("Ignoring this unusable value from the sensor: %s", distance)
+                next
+            # If the sensor reading is *slightly* more than the measured empty depth of the sump, silently pretend it's empty
+            distance = SUMP_DEPTH_CM
+        logger.info("Took a valid sensor measurement: %s cm", distance)
         distances.append(distance)
         time.sleep(0.25)
 
@@ -106,12 +113,29 @@ def monitor_sump():
 
     while True:
         latest_measurement = get_average_distance(average_readings)
-        logger.info("Averaged measurement: %s cm", latest_measurement)
         if latest_measurement:
+            logger.info("Averaged measurement: %s cm", latest_measurement)
             measurements.append(latest_measurement)
             calculate_fill_rate()
+        else:
+            logger.warning("No usable values from the latest round of %s sensor readings", average_readings)
+            # Maybe, for error control, we should track the number of failed sensor readings
+            # If the number of sequential sensor failures hits a threshold, we exit?... or reset the sensor?
+            # Reset the counter if things return to normal
+            # Keep a long-term track?
+            # If the 
+            
         
         time.sleep(measurement_frequency)
+
+def retrieve_water_depth():
+    """Returns the depth of the water, calculated from the most recent valid sensor measurement"""
+    global latest_measurement
+    if latest_measurement: 
+        water_depth = round(SUMP_DEPTH_CM - latest_measurement)
+        if water_depth <= 0:
+            return 0 
+        return water_depth
 
 
 def calculate_fill_rate():
@@ -160,34 +184,31 @@ def startup():
 @app.route('/api/average_depth', methods=['GET'])
 def get_average_depth():
     """API route to get the most recent averaged measurement."""
-    if latest_measurement: 
-        water_depth = round(SUMP_DEPTH_CM - latest_measurement)
-        return jsonify({"average_depth_cm": water_depth})
-    else:
-        return jsonify({"average_depth_cm": "UNKNOWN"})
-        
+    deepness = retrieve_water_depth()
+    return jsonify({"average_depth_cm": deepness})
 
 
 @app.route('/api/state', methods=['GET'])
 def get_state():
     """API route to get the current state of the sump (filling, emptying, static)."""
+    global filling
     return jsonify({"state": filling})
 
 
 @app.route('/api/fill_rate', methods=['GET'])
 def get_fill_rate():
     """API route to get the current fill rate in liters per minute."""
+    global current_rate
     return jsonify({"fill_rate_liters_per_minute": current_rate})
 
 # Add a new endpoint for Prometheus metrics
 @app.route('/metrics', methods=['GET'])
 def metrics():
     water_depth=-1
-    global latest_measurement, current_rate
+    global current_rate
     # Update the gauge with current water depth
-    if latest_measurement: 
-        water_depth = round(SUMP_DEPTH_CM - latest_measurement)
-    water_depth_gauge.set(water_depth)
+    deepness = retrieve_water_depth()
+    water_depth_gauge.set(deepness)
     sump_fill_rate_gauge.set(current_rate)
 
     # Generate and return metrics in Prometheus format
