@@ -106,6 +106,7 @@ def monitor_sump():
 
     while True:
         latest_measurement = get_average_distance(average_readings)
+        logger.info("Averaged measurement: %s cm", latest_measurement)
         if latest_measurement:
             measurements.append(latest_measurement)
             calculate_fill_rate()
@@ -160,7 +161,7 @@ def startup():
 def get_average_depth():
     """API route to get the most recent averaged measurement."""
     if latest_measurement: 
-        water_depth = SUMP_DEPTH_CM - latest_measurement
+        water_depth = round(SUMP_DEPTH_CM - latest_measurement)
         return jsonify({"average_depth_cm": water_depth})
     else:
         return jsonify({"average_depth_cm": "UNKNOWN"})
@@ -185,7 +186,7 @@ def metrics():
     global latest_measurement, current_rate
     # Update the gauge with current water depth
     if latest_measurement: 
-        water_depth = SUMP_DEPTH_CM - latest_measurement
+        water_depth = round(SUMP_DEPTH_CM - latest_measurement)
     water_depth_gauge.set(water_depth)
     sump_fill_rate_gauge.set(current_rate)
 
