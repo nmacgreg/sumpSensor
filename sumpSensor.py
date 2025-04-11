@@ -132,10 +132,17 @@ def retrieve_water_depth():
     """Returns the depth of the water, calculated from the most recent valid sensor measurement"""
     global latest_measurement
     if latest_measurement: 
-        water_depth = round(SUMP_DEPTH_CM - latest_measurement)
+        water_depth = SUMP_DEPTH_CM - latest_measurement
+        # There are trivial minor variations in the analogue readings from the sensor that I don't care about
+        # I want it to read "actual zero" unless the actual measurement is above 1cm
+        if water_depth < 1:
+            water_depth = 0
+        # round it to 1 decimal place - to quiet some of the noise
+        water_depth = round(water_depth, 1)
         if water_depth <= 0:
             return 0 
         return water_depth
+    # Neil must think hard about what to do, if latest_measurement is NAN.
 
 
 def calculate_fill_rate():
