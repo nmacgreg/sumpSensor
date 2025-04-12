@@ -13,7 +13,7 @@ Then this is for you!
 
 * Start the process in one terminal: `gunicorn --workers 1 --bind 0.0.0.0:5000 sumpSensor:app`
 * Test the route Nagios will use (depth of the water, in cm): `curl http://localhost:5000/api/average_depth`
-* Test the Prometheus route: `curl -s http://localhost:5000/metrics | tail -6
+* Test the Prometheus route: `curl -s http://localhost:5000/metrics | tail -6`
 * Reveal the current state, eg static, filling, or emptying: `curl http://localhost:5000/api/state`
 * Reveal the rate at which the sump is filling (or emptying), in litres per minute: `curl http://localhost:5000/api/fill_rate`
 * (Perhaps open port 5000 on your firewall, for testing remotely?)
