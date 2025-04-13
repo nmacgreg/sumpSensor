@@ -3,11 +3,14 @@
 Ever needed both a daemon that can monitor the status of the HC-SR01 sensor in your sump, and respond to queries from both Nagios and Prometheus?
 Then this is for you!
 
-## Some prerequisites
+## Some Prerequisites
 
-* This is tested only on Raspberry Pi OS
-* You need gunicorn installed: `sudo apt install gunicorn` (there are other ways to get this installed)
-
+* This was created for python3
+* This is tested only on Raspberry Pi OS; Raspberry Pi Model 3B+
+* `gunicorn` is required & not installed by default: `sudo apt install gunicorn` (there are other ways to get this installed)
+* Python library: `sudo apt install python3-prometheus-client`
+* You must create the path to `/etc/sumpSensor/sumpSensor.conf`. Use the supplied sample configuration file, then tweak it for your needs.
+* (? Driver for hc-sr04 sensor?)
 
 ## For Testing purposes
 
@@ -18,7 +21,6 @@ Then this is for you!
 * Reveal the rate at which the sump is filling (or emptying), in litres per minute: `curl http://localhost:5000/api/fill_rate`
 * (Perhaps open port 5000 on your firewall, for testing remotely?)
 
----
 
 ## Awareness of Inaccuracy
 
